@@ -1,66 +1,58 @@
-import Image from "next/image";
-import styles from "./page.module.css";
+'use client';
+
+import { useEffect, useState } from 'react';
+import TopicCard from '@/components/TopicCard';
+import { useUser } from '@/hooks/useUser';
+
+interface Topic {
+  id: string;
+  title: string;
+  author_id: string;
+  net_score: number;
+  comment_count: number;
+  created_at: string;
+}
 
 export default function Home() {
+  const [topics, setTopics] = useState<Topic[]>([]);
+  const user = useUser();
+
+  useEffect(() => {
+    fetch('/api/topics')
+      .then(res => res.json())
+      .then(data => setTopics(data))
+      .catch(err => console.error(err));
+  }, []);
+
   return (
-    <div className={styles.page}>
-      <main className={styles.main}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className={styles.intro}>
-          <h1>To get started, edit the page.tsx file.</h1>
-          <p>
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className={styles.ctas}>
-          <a
-            className={styles.primary}
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className={styles.logo}
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className={styles.secondary}
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+    <main className="min-h-screen p-8 max-w-2xl mx-auto">
+      <header className="mb-8 flex justify-between items-center">
+        <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-600">
+          Topics
+        </h1>
+        <button
+          className="btn btn-primary"
+          onClick={() => {
+            // Simple prompt for MVP creation
+            const title = prompt('Topic Title:');
+            if (title && user) {
+              fetch('/api/topics', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ title, author_id: user })
+              }).then(() => window.location.reload());
+            }
+          }}
+        >
+          New Topic
+        </button>
+      </header>
+
+      <div className="flex flex-col gap-4">
+        {topics.map(topic => (
+          <TopicCard key={topic.id} topic={topic} />
+        ))}
+      </div>
+    </main>
   );
 }
